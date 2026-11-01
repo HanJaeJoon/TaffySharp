@@ -21,7 +21,7 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
 {
     internal sealed class NodeData
     {
-        public NodeData(Style style) => Style = style;
+        public NodeData(Style style) => Style = style ?? throw new ArgumentNullException(nameof(style));
 
         public Style Style;
         public Layout UnroundedLayout;
@@ -56,16 +56,22 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
     public void DisableRounding() => UseRounding = false;
 
     /// <summary>Creates and adds a new unattached leaf node to the tree, and returns the node of the new node.</summary>
-    public NodeId NewLeaf(Style layout) => Nodes.Insert(new NodeData(layout));
+    /// <remarks>
+    /// The tree stores <paramref name="style"/> by reference, so give each node its own <see cref="TaffySharp.Style"/>
+    /// instance (or a <see cref="Style.Clone"/>): nodes sharing one instance change together when it is mutated.
+    /// </remarks>
+    public NodeId NewLeaf(Style style) => Nodes.Insert(new NodeData(style));
 
     /// <summary>Creates and adds a new unattached leaf node to the tree with an associated context.</summary>
-    public NodeId NewLeafWithContext(Style layout, TNodeContext context) =>
-        Nodes.Insert(new NodeData(layout) { HasContext = true, Context = context });
+    /// <remarks><paramref name="style"/> is stored by reference, as in <see cref="NewLeaf"/>.</remarks>
+    public NodeId NewLeafWithContext(Style style, TNodeContext context) =>
+        Nodes.Insert(new NodeData(style) { HasContext = true, Context = context });
 
     /// <summary>Creates and adds a new node, which may have any number of children.</summary>
-    public NodeId NewWithChildren(Style layout, params NodeId[] children)
+    /// <remarks><paramref name="style"/> is stored by reference, as in <see cref="NewLeaf"/>.</remarks>
+    public NodeId NewWithChildren(Style style, params NodeId[] children)
     {
-        NodeId id = Nodes.Insert(new NodeData(layout) { Children = new List<NodeId>(children) });
+        NodeId id = Nodes.Insert(new NodeData(style) { Children = new List<NodeId>(children) });
         foreach (NodeId child in children)
         {
             Nodes[child].Parent = id;
@@ -102,13 +108,13 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
     }
 
     /// <summary>Sets the context data associated with the node. Passing <c>null</c> removes the context.</summary>
-    public void SetNodeContext(NodeId node, TNodeContext? measure)
+    public void SetNodeContext(NodeId node, TNodeContext? context)
     {
         NodeData data = Nodes[node];
-        if (measure is not null)
+        if (context is not null)
         {
             data.HasContext = true;
-            data.Context = measure;
+            data.Context = context;
         }
         else
         {
@@ -258,9 +264,14 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
     public IReadOnlyList<NodeId> HoistedChildren(NodeId node) => Nodes[node].HoistedChildren;
 
     /// <summary>Sets the style of the provided node.</summary>
+    /// <remarks>
+    /// The tree stores <paramref name="style"/> by reference: use one instance per node (or <see cref="Style.Clone"/>),
+    /// otherwise mutating it in place changes every node that shares it while only the node passed to
+    /// <see cref="MarkDirty"/> is invalidated.
+    /// </remarks>
     public void SetStyle(NodeId node, Style style)
     {
-        Nodes[node].Style = style;
+        Nodes[node].Style = style ?? throw new ArgumentNullException(nameof(style));
         MarkDirty(node);
     }
 
@@ -297,6 +308,11 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
     public bool Dirty(NodeId node) => Nodes[node].Cache.IsEmpty();
 
     /// <summary>Updates the stored layout of the provided node and its children, measuring leaves with <paramref name="measureFunction"/>.</summary>
+    /// <remarks>
+    /// Layout is recursive and uses about 8 KB of stack per nesting level, so a 1 MB thread handles roughly
+    /// 100-120 nested levels; a deeper tree overflows the stack and terminates the process. Run layout of deep
+    /// trees on a thread with a larger stack, e.g. <c>new Thread(work, 16 * 1024 * 1024)</c>.
+    /// </remarks>
     public void ComputeLayoutWithMeasure(
         NodeId nodeId,
         Size<AvailableSpace> availableSpace,
@@ -312,6 +328,7 @@ public class TaffyTree<TNodeContext> : ITraverseTree, ICacheTree, IPrintTree
     }
 
     /// <summary>Updates the stored layout of the provided node and its children (leaves have a zero content size).</summary>
+    /// <remarks>See <see cref="ComputeLayoutWithMeasure"/> for the nesting depth limit.</remarks>
     public void ComputeLayout(NodeId node, Size<AvailableSpace> availableSpace) =>
         ComputeLayoutWithMeasure(node, availableSpace, static (inputs, _, _, style) =>
             Compute.ComputeLeafLayout(inputs, style, static (_, _) => 0f, static (_, _) => Size.Zero));

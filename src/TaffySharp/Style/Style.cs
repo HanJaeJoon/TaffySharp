@@ -250,6 +250,13 @@ public sealed class Style : ICoreStyle, IOofItemStyle, IBlockContainerStyle, IBl
 
     public Clear Clear { get; set; } = TaffySharp.Clear.None;
 
+    /// <summary>
+    /// Defaults to <see cref="Position.Static"/> as in CSS (older taffy versions defaulted to relative). An absolute
+    /// box is laid out against its containing block, the nearest ancestor that is not <see cref="Position.Static"/>
+    /// (or the root; fixed boxes always use the root), and its <see cref="Layout.Location"/> is relative to that
+    /// ancestor, not to its parent. <see cref="TaffyTree{TNodeContext}.HoistedChildren"/> lists the out-of-flow
+    /// boxes of each containing block.
+    /// </summary>
     public Position Position { get; set; } = Position.Static;
 
     public Rect<LengthPercentageAuto> Inset { get; set; } = new(LengthPercentageAuto.Auto, LengthPercentageAuto.Auto, LengthPercentageAuto.Auto, LengthPercentageAuto.Auto);

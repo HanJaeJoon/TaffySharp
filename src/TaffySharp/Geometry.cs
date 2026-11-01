@@ -302,9 +302,19 @@ public static class Size
 
     public static Size<float?> New(float width, float height) => new(width, height);
 
+    /// <summary>A <see cref="Size{T}"/> of <see cref="Dimension"/> lengths, for <c>Size</c>, <c>MinSize</c> and <c>MaxSize</c> (Rust <c>Size::from_lengths</c>).</summary>
     public static Size<Dimension> FromLengths(float width, float height) => new(Dimension.Length(width), Dimension.Length(height));
 
+    /// <summary>A <see cref="Size{T}"/> of <see cref="Dimension"/> percentages (fractions: <c>0.5f</c> is 50%) (Rust <c>Size::from_percent</c>).</summary>
     public static Size<Dimension> FromPercent(float width, float height) => new(Dimension.Percent(width), Dimension.Percent(height));
+
+    /// <summary>A <see cref="Size{T}"/> of <see cref="LengthPercentage"/> lengths, for <c>Gap</c>.</summary>
+    public static Size<LengthPercentage> LengthPercentageFromLengths(float width, float height) =>
+        new(LengthPercentage.Length(width), LengthPercentage.Length(height));
+
+    /// <summary>A <see cref="Size{T}"/> of <see cref="LengthPercentage"/> percentages (fractions: <c>0.5f</c> is 50%), for <c>Gap</c>.</summary>
+    public static Size<LengthPercentage> LengthPercentageFromPercent(float width, float height) =>
+        new(LengthPercentage.Percent(width), LengthPercentage.Percent(height));
 
     internal static Size<float?> FromCross(FlexDirection direction, float? value) =>
         direction.IsRow() ? new(null, value) : new(value, null);
@@ -317,11 +327,30 @@ public static class Rect
 
     public static Rect<float?> None => new(null, null, null, null);
 
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="Dimension"/> lengths (left, right, top, bottom).</summary>
+    /// <remarks>For <c>Padding</c>/<c>Border</c> use <see cref="LengthPercentageFromLength"/>; for <c>Margin</c>/<c>Inset</c> use <see cref="LengthPercentageAutoFromLength"/>.</remarks>
     public static Rect<Dimension> FromLength(float start, float end, float top, float bottom) =>
         new(Dimension.Length(start), Dimension.Length(end), Dimension.Length(top), Dimension.Length(bottom));
 
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="Dimension"/> percentages (fractions: <c>0.5f</c> is 50%; left, right, top, bottom).</summary>
     public static Rect<Dimension> FromPercent(float start, float end, float top, float bottom) =>
         new(Dimension.Percent(start), Dimension.Percent(end), Dimension.Percent(top), Dimension.Percent(bottom));
+
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="LengthPercentage"/> lengths (left, right, top, bottom), for <c>Padding</c> and <c>Border</c>.</summary>
+    public static Rect<LengthPercentage> LengthPercentageFromLength(float start, float end, float top, float bottom) =>
+        new(LengthPercentage.Length(start), LengthPercentage.Length(end), LengthPercentage.Length(top), LengthPercentage.Length(bottom));
+
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="LengthPercentage"/> percentages (fractions; left, right, top, bottom), for <c>Padding</c> and <c>Border</c>.</summary>
+    public static Rect<LengthPercentage> LengthPercentageFromPercent(float start, float end, float top, float bottom) =>
+        new(LengthPercentage.Percent(start), LengthPercentage.Percent(end), LengthPercentage.Percent(top), LengthPercentage.Percent(bottom));
+
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="LengthPercentageAuto"/> lengths (left, right, top, bottom), for <c>Margin</c> and <c>Inset</c>.</summary>
+    public static Rect<LengthPercentageAuto> LengthPercentageAutoFromLength(float start, float end, float top, float bottom) =>
+        new(LengthPercentageAuto.Length(start), LengthPercentageAuto.Length(end), LengthPercentageAuto.Length(top), LengthPercentageAuto.Length(bottom));
+
+    /// <summary>A <see cref="Rect{T}"/> of <see cref="LengthPercentageAuto"/> percentages (fractions; left, right, top, bottom), for <c>Margin</c> and <c>Inset</c>.</summary>
+    public static Rect<LengthPercentageAuto> LengthPercentageAutoFromPercent(float start, float end, float top, float bottom) =>
+        new(LengthPercentageAuto.Percent(start), LengthPercentageAuto.Percent(end), LengthPercentageAuto.Percent(top), LengthPercentageAuto.Percent(bottom));
 }
 
 /// <summary>Constants for <see cref="Point{T}"/>.</summary>

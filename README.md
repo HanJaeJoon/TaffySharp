@@ -56,6 +56,31 @@ The API mirrors taffy's: `Style` has the same properties (in PascalCase), percen
 and the low-level `Compute.*` functions and tree interfaces let you run the algorithms on your own tree type.
 Not ported: CSS string parsing (taffy's `parse` feature) and serde support.
 
+`Rect.FromLength`/`FromPercent` and `Size.FromLengths`/`FromPercent` build `Dimension` values (for `Size`, `MinSize`,
+`MaxSize`). The other length types have their own helpers: `Rect.LengthPercentageFromLength` for `Padding` and `Border`,
+`Rect.LengthPercentageAutoFromLength` for `Margin` and `Inset`, `Size.LengthPercentageFromLengths` for `Gap`
+(plus the `...FromPercent` variants).
+
+### Things to know
+
+- **Styles are stored by reference.** `NewLeaf`, `NewWithChildren` and `SetStyle` keep the `Style` instance you pass.
+  Use one instance per node (or `style.Clone()`): two nodes sharing an instance both change when it is mutated, but
+  only the node you pass to `MarkDirty` is re-laid out. To change a style in place, mutate `tree.Style(node)` and call
+  `tree.MarkDirty(node)`, or pass a new instance to `SetStyle`.
+- **`Position` defaults to `Static`,** as in CSS (older taffy versions defaulted to relative). An absolute box is
+  positioned against its containing block, the nearest ancestor with a non-static `Position` (or the root), and its
+  `Layout.Location` is relative to that ancestor, not to its parent. A renderer that sums parent offsets must use
+  `tree.HoistedChildren(node)`, which lists the out-of-flow boxes each containing block positioned.
+- **Nesting depth is limited by the thread's stack.** Layout is recursive and uses about 8 KB of stack per nesting
+  level, so a 1 MB thread handles roughly 100-120 levels. A deeper tree overflows the stack, which terminates the
+  process. Lay out deep trees (generated UIs, nested comment threads, tree views) on a thread with a larger stack:
+
+  ``` c#
+  Thread thread = new(() => tree.ComputeLayout(root, Size.MaxContent), 16 * 1024 * 1024);
+  thread.Start();
+  thread.Join();
+  ```
+
 ## Credits
 
 Algorithm and original implementation: [taffy](https://github.com/DioxusLabs/taffy) by the Taffy Authors and Visly Inc. (MIT).
