@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-01
+
 ### Added
 
 - Initial C# port of [taffy](https://github.com/DioxusLabs/taffy) v0.15.1: `TaffyTree` with Flexbox
@@ -26,3 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `TaffyTree` parameter names: `NewLeaf`, `NewLeafWithContext` and `NewWithChildren` take `style` (was `layout`),
   `SetNodeContext` takes `context` (was `measure`).
+
+[Unreleased]: https://github.com/HanJaeJoon/TaffySharp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/HanJaeJoon/TaffySharp/releases/tag/v0.1.0
